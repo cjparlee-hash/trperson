@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: trashperson-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        sync: false
