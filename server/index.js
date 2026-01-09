@@ -116,7 +116,7 @@ async function start() {
 
     if (fs.existsSync(schemaPath)) {
         const schema = fs.readFileSync(schemaPath, 'utf8');
-        db.run(schema);
+        db.exec(schema);  // exec() handles multiple statements, run() does not
         const data = db.export();
         fs.writeFileSync(dbPath, Buffer.from(data));
     }
