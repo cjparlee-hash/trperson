@@ -61,7 +61,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
     try {
         const result = db.prepare(
             'INSERT INTO customers (name, email, phone, notes, status) VALUES (?, ?, ?, ?, ?)'
-        ).run(name, email, phone, notes, status);
+        ).run(name, email || null, phone || null, notes || null, status);
 
         // Log activity
         db.prepare(
