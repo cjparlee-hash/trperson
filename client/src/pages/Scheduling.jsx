@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 function Scheduling() {
     const [appointments, setAppointments] = useState([]);
     const [customers, setCustomers] = useState([]);
@@ -25,8 +27,8 @@ function Scheduling() {
 
         try {
             const [appointmentsRes, customersRes] = await Promise.all([
-                fetch(`/api/appointments?date=${selectedDate}`, { headers }),
-                fetch('/api/customers', { headers })
+                fetch(`${API_URL}/api/appointments?date=${selectedDate}`, { headers }),
+                fetch(`${API_URL}/api/customers`, { headers })
             ]);
 
             const [appointmentsData, customersData] = await Promise.all([
@@ -46,7 +48,7 @@ function Scheduling() {
     const fetchCustomerAddresses = async (customerId) => {
         const token = localStorage.getItem('token');
         try {
-            const response = await fetch(`/api/customers/${customerId}`, {
+            const response = await fetch(`${API_URL}/api/customers/${customerId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = await response.json();
@@ -70,7 +72,7 @@ function Scheduling() {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch('/api/appointments', {
+            const response = await fetch(`${API_URL}/api/appointments`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,7 +93,7 @@ function Scheduling() {
     const handleStatusChange = async (appointmentId, status) => {
         const token = localStorage.getItem('token');
         try {
-            await fetch(`/api/appointments/${appointmentId}/status`, {
+            await fetch(`${API_URL}/api/appointments/${appointmentId}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -158,7 +160,12 @@ function Scheduling() {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Scheduling</h1>
+                <div className="flex items-center">
+                    <svg className="h-8 w-8 text-primary-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <h1 className="text-2xl font-bold text-gray-900">Scheduling</h1>
+                </div>
                 <button
                     onClick={openModal}
                     className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center"
