@@ -41,8 +41,8 @@ router.post('/register', (req, res) => {
             token
         });
     } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ error: 'Registration failed' });
+        console.error('Registration error:', error.message, error.stack);
+        res.status(500).json({ error: 'Registration failed', details: error.message });
     }
 });
 
