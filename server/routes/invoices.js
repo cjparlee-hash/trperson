@@ -78,14 +78,21 @@ router.get('/:id', authenticate, (req, res) => {
 
 // Create invoice
 router.post('/', authenticate, isDispatcher, (req, res) => {
-    const { customer_id, items, tax = 0, due_date, notes } = req.body;
+    let { customer_id, customer_name, items, tax = 0, due_date, notes } = req.body;
     const db = req.app.locals.db;
 
-    if (!customer_id || !items || items.length === 0) {
+    if ((!customer_id && !customer_name) || !items || items.length === 0) {
         return res.status(400).json({ error: 'Customer and at least one item are required' });
     }
 
     try {
+        // If no customer_id but customer_name provided, create new customer
+        if (!customer_id && customer_name) {
+            const result = db.prepare(
+                'INSERT INTO customers (name, status) VALUES (?, ?)'
+            ).run(customer_name.trim(), 'active');
+            customer_id = result.lastInsertRowid;
+        }
         const invoice_number = generateInvoiceNumber(db);
         const amount = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
         const total = amount + (amount * tax / 100);
