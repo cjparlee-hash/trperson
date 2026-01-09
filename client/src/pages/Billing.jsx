@@ -10,6 +10,7 @@ function Billing() {
     const [activeTab, setActiveTab] = useState('all');
     const [formData, setFormData] = useState({
         customer_id: '',
+        customer_name: '',
         due_date: '',
         tax: 0,
         notes: '',
@@ -118,6 +119,7 @@ function Billing() {
 
         setFormData({
             customer_id: '',
+            customer_name: '',
             due_date: defaultDueDate.toISOString().split('T')[0],
             tax: 0,
             notes: '',
@@ -286,17 +288,28 @@ function Billing() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                                    <select
-                                        value={formData.customer_id}
-                                        onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
+                                    <input
+                                        type="text"
+                                        list="customer-list"
+                                        value={formData.customer_name}
+                                        onChange={(e) => {
+                                            const name = e.target.value;
+                                            const match = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
+                                            setFormData({
+                                                ...formData,
+                                                customer_name: name,
+                                                customer_id: match ? match.id : ''
+                                            });
+                                        }}
+                                        placeholder="Type or select customer"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                         required
-                                    >
-                                        <option value="">Select customer</option>
+                                    />
+                                    <datalist id="customer-list">
                                         {customers.map((c) => (
-                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                            <option key={c.id} value={c.name} />
                                         ))}
-                                    </select>
+                                    </datalist>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
