@@ -136,7 +136,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
         });
     } catch (error) {
         console.error('Error creating invoice:', error);
-        res.status(500).json({ error: 'Failed to create invoice' });
+        res.status(500).json({ error: 'Failed to create invoice', details: error.message });
     }
 });
 
