@@ -100,7 +100,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
         const result = db.prepare(`
             INSERT INTO invoices (invoice_number, customer_id, amount, tax, total, due_date, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        `).run(invoice_number, customer_id, amount, tax, total, due_date, notes);
+        `).run(invoice_number, customer_id, amount, tax || 0, total, due_date || null, notes || null);
 
         // Insert items
         const insertItem = db.prepare(`
