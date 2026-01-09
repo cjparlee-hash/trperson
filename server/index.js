@@ -39,7 +39,12 @@ class DatabaseWrapper {
         const dbPath = this.dbPath;
         return {
             run(...params) {
-                db.run(sql, params);
+                const stmt = db.prepare(sql);
+                if (params.length > 0) {
+                    stmt.bind(params);
+                }
+                stmt.step();
+                stmt.free();
                 const result = { changes: db.getRowsModified(), lastInsertRowid: 0 };
                 // Get last insert id
                 const lastId = db.exec("SELECT last_insert_rowid() as id");
