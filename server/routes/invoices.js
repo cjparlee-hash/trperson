@@ -89,8 +89,8 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
         // If no customer_id but customer_name provided, create new customer
         if (!customer_id && customer_name) {
             const result = db.prepare(
-                'INSERT INTO customers (name, status) VALUES (?, ?)'
-            ).run(customer_name.trim(), 'active');
+                'INSERT INTO customers (name, email, phone, notes, status) VALUES (?, ?, ?, ?, ?)'
+            ).run(customer_name.trim(), null, null, null, 'active');
             customer_id = result.lastInsertRowid;
         }
         const invoice_number = generateInvoiceNumber(db);
