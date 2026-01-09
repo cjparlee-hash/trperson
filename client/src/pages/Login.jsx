@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 function Login({ onLogin }) {
     const [isRegister, setIsRegister] = useState(false);
     const [formData, setFormData] = useState({
@@ -22,7 +24,7 @@ function Login({ onLogin }) {
                 ? formData
                 : { email: formData.email, password: formData.password };
 
-            const response = await fetch(endpoint, {
+            const response = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
