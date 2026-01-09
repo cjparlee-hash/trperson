@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 function Dashboard() {
     const [stats, setStats] = useState({
         customers: 0,
@@ -20,10 +22,10 @@ function Dashboard() {
 
         try {
             const [customersRes, leadsRes, appointmentsRes, invoicesRes] = await Promise.all([
-                fetch('/api/customers', { headers }),
-                fetch('/api/leads', { headers }),
-                fetch(`/api/appointments?date=${new Date().toISOString().split('T')[0]}`, { headers }),
-                fetch('/api/invoices?status=sent', { headers })
+                fetch(`${API_URL}/api/customers`, { headers }),
+                fetch(`${API_URL}/api/leads`, { headers }),
+                fetch(`${API_URL}/api/appointments?date=${new Date().toISOString().split('T')[0]}`, { headers }),
+                fetch(`${API_URL}/api/invoices?status=sent`, { headers })
             ]);
 
             const [customers, leads, appointments, invoices] = await Promise.all([
@@ -63,7 +65,22 @@ function Dashboard() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
+            <div className="flex items-center mb-6">
+                <svg
+                    className="h-8 w-8 text-primary-600 mr-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                </svg>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
