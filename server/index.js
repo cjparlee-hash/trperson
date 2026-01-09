@@ -135,7 +135,20 @@ async function start() {
 
     // Health check
     app.get('/api/health', (req, res) => {
-        res.json({ status: 'ok', timestamp: new Date().toISOString() });
+        const db = req.app.locals.db;
+        let tableCount = 0;
+        try {
+            const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+            tableCount = tables.length;
+        } catch (e) {
+            tableCount = -1;
+        }
+        res.json({
+            status: 'ok',
+            timestamp: new Date().toISOString(),
+            tables: tableCount,
+            env: process.env.NODE_ENV || 'not set'
+        });
     });
 
     // Error handling middleware
