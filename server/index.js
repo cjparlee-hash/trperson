@@ -86,7 +86,17 @@ class DatabaseWrapper {
 async function start() {
     const SQL = await initSqlJs();
 
-    const dbPath = join(__dirname, '..', 'database', 'trashperson.db');
+    // Use local data folder in production, ../database in development
+    const devDbPath = join(__dirname, '..', 'database', 'trashperson.db');
+    const prodDbPath = join(__dirname, 'data', 'trashperson.db');
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Ensure data directory exists in production
+    if (isProduction && !fs.existsSync(join(__dirname, 'data'))) {
+        fs.mkdirSync(join(__dirname, 'data'), { recursive: true });
+    }
+
+    const dbPath = isProduction ? prodDbPath : (fs.existsSync(devDbPath) ? devDbPath : prodDbPath);
     let db;
 
     // Load existing database or create new one
@@ -99,8 +109,11 @@ async function start() {
 
     const dbWrapper = new DatabaseWrapper(db, dbPath);
 
-    // Run schema
-    const schemaPath = join(__dirname, '..', 'database', 'schema.sql');
+    // Run schema - check both locations
+    const devSchemaPath = join(__dirname, '..', 'database', 'schema.sql');
+    const prodSchemaPath = join(__dirname, 'schema.sql');
+    const schemaPath = fs.existsSync(devSchemaPath) ? devSchemaPath : prodSchemaPath;
+
     if (fs.existsSync(schemaPath)) {
         const schema = fs.readFileSync(schemaPath, 'utf8');
         db.run(schema);
