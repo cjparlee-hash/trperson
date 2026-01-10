@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 const navItems = [
@@ -10,13 +11,63 @@ const navItems = [
 ];
 
 function Layout({ user, onLogout, children }) {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Mobile header */}
+            <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center">
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        className="p-2 rounded-md hover:bg-gray-800"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <h1 className="ml-3 text-lg font-bold text-primary-400">TrashPerson</h1>
+                </div>
+                <button
+                    onClick={onLogout}
+                    className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800"
+                    title="Logout"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
+            </div>
+
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="fixed inset-y-0 left-0 w-64 bg-gray-900 text-white">
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0
+            `}>
                 <div className="p-4 border-b border-gray-800">
-                    <h1 className="text-xl font-bold text-primary-400">TrashPerson</h1>
-                    <p className="text-sm text-gray-400">CRM</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-xl font-bold text-primary-400">TrashPerson</h1>
+                            <p className="text-sm text-gray-400">CRM</p>
+                        </div>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="lg:hidden p-2 rounded-md hover:bg-gray-800"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <nav className="mt-4">
@@ -24,6 +75,7 @@ function Layout({ user, onLogout, children }) {
                         <NavLink
                             key={item.path}
                             to={item.path}
+                            onClick={() => setSidebarOpen(false)}
                             className={({ isActive }) =>
                                 `flex items-center px-4 py-3 text-sm font-medium transition-colors ${
                                     isActive
@@ -61,7 +113,7 @@ function Layout({ user, onLogout, children }) {
             </aside>
 
             {/* Main content */}
-            <main className="ml-64 p-8">
+            <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
                 {children}
             </main>
         </div>
