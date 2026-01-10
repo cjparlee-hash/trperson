@@ -4,16 +4,16 @@ import { authenticate, isDispatcher } from '../middleware/auth.js';
 const router = express.Router();
 
 // Generate invoice number
-const generateInvoiceNumber = (db) => {
+const generateInvoiceNumber = async (db) => {
     const year = new Date().getFullYear();
-    const count = db.prepare(
+    const count = await db.prepare(
         "SELECT COUNT(*) as count FROM invoices WHERE invoice_number LIKE ?"
     ).get(`INV-${year}-%`);
     return `INV-${year}-${String(count.count + 1).padStart(4, '0')}`;
 };
 
 // Get all invoices
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     const { status, customer_id } = req.query;
 
@@ -37,7 +37,7 @@ router.get('/', authenticate, (req, res) => {
     sql += ' ORDER BY i.created_at DESC';
 
     try {
-        const invoices = db.prepare(sql).all(...params);
+        const invoices = await db.prepare(sql).all(...params);
         res.json(invoices);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch invoices' });
@@ -45,10 +45,10 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Get single invoice with items
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const invoice = db.prepare(`
+        const invoice = await db.prepare(`
             SELECT i.*, c.name as customer_name, c.email as customer_email, c.phone as customer_phone
             FROM invoices i
             JOIN customers c ON c.id = i.customer_id
@@ -59,14 +59,14 @@ router.get('/:id', authenticate, (req, res) => {
             return res.status(404).json({ error: 'Invoice not found' });
         }
 
-        const items = db.prepare(`
+        const items = await db.prepare(`
             SELECT ii.*, s.name as service_name
             FROM invoice_items ii
             LEFT JOIN services s ON s.id = ii.service_id
             WHERE ii.invoice_id = ?
         `).all(req.params.id);
 
-        const payments = db.prepare(
+        const payments = await db.prepare(
             'SELECT * FROM payments WHERE invoice_id = ? ORDER BY created_at DESC'
         ).all(req.params.id);
 
@@ -77,7 +77,7 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // Create invoice
-router.post('/', authenticate, isDispatcher, (req, res) => {
+router.post('/', authenticate, isDispatcher, async (req, res) => {
     let { customer_id, customer_name, items, tax = 0, due_date, notes } = req.body;
     const db = req.app.locals.db;
 
@@ -88,28 +88,26 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
     try {
         // If no customer_id but customer_name provided, create new customer
         if (!customer_id && customer_name) {
-            const result = db.prepare(
+            const result = await db.prepare(
                 'INSERT INTO customers (name, email, phone, notes, status) VALUES (?, ?, ?, ?, ?)'
             ).run(customer_name.trim(), null, null, null, 'active');
             customer_id = result.lastInsertRowid;
         }
-        const invoice_number = generateInvoiceNumber(db);
+        const invoice_number = await generateInvoiceNumber(db);
         const amount = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
         const total = amount + (amount * tax / 100);
 
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO invoices (invoice_number, customer_id, amount, tax, total, due_date, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `).run(invoice_number, customer_id, amount, tax || 0, total, due_date || null, notes || null);
 
         // Insert items
-        const insertItem = db.prepare(`
-            INSERT INTO invoice_items (invoice_id, service_id, description, quantity, unit_price, total)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `);
-
         for (const item of items) {
-            insertItem.run(
+            await db.prepare(`
+                INSERT INTO invoice_items (invoice_id, service_id, description, quantity, unit_price, total)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `).run(
                 result.lastInsertRowid,
                 item.service_id || null,
                 item.description,
@@ -119,7 +117,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
             );
         }
 
-        db.prepare(
+        await db.prepare(
             'INSERT INTO activity_log (entity_type, entity_id, action, user_id) VALUES (?, ?, ?, ?)'
         ).run('invoice', result.lastInsertRowid, 'created', req.user.id);
 
@@ -141,7 +139,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
 });
 
 // Update invoice status
-router.patch('/:id/status', authenticate, isDispatcher, (req, res) => {
+router.patch('/:id/status', authenticate, isDispatcher, async (req, res) => {
     const { status } = req.body;
     const db = req.app.locals.db;
 
@@ -156,7 +154,7 @@ router.patch('/:id/status', authenticate, isDispatcher, (req, res) => {
             updates.paid_date = new Date().toISOString().split('T')[0];
         }
 
-        const result = db.prepare(`
+        const result = await db.prepare(`
             UPDATE invoices SET status = ?, paid_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
         `).run(status, updates.paid_date || null, req.params.id);
 
@@ -171,28 +169,28 @@ router.patch('/:id/status', authenticate, isDispatcher, (req, res) => {
 });
 
 // Record payment
-router.post('/:id/payments', authenticate, isDispatcher, (req, res) => {
+router.post('/:id/payments', authenticate, isDispatcher, async (req, res) => {
     const { amount, stripe_payment_id, payment_method } = req.body;
     const db = req.app.locals.db;
 
     try {
-        const invoice = db.prepare('SELECT * FROM invoices WHERE id = ?').get(req.params.id);
+        const invoice = await db.prepare('SELECT * FROM invoices WHERE id = ?').get(req.params.id);
         if (!invoice) {
             return res.status(404).json({ error: 'Invoice not found' });
         }
 
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO payments (invoice_id, stripe_payment_id, amount, status, payment_method)
             VALUES (?, ?, ?, 'succeeded', ?)
         `).run(req.params.id, stripe_payment_id, amount, payment_method);
 
         // Check if fully paid
-        const totalPaid = db.prepare(
+        const totalPaid = await db.prepare(
             "SELECT SUM(amount) as total FROM payments WHERE invoice_id = ? AND status = 'succeeded'"
         ).get(req.params.id);
 
         if (totalPaid.total >= invoice.total) {
-            db.prepare(
+            await db.prepare(
                 "UPDATE invoices SET status = 'paid', paid_date = CURRENT_TIMESTAMP WHERE id = ?"
             ).run(req.params.id);
         }
@@ -210,11 +208,11 @@ router.post('/:id/payments', authenticate, isDispatcher, (req, res) => {
 });
 
 // Delete invoice (only drafts)
-router.delete('/:id', authenticate, isDispatcher, (req, res) => {
+router.delete('/:id', authenticate, isDispatcher, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const invoice = db.prepare('SELECT status FROM invoices WHERE id = ?').get(req.params.id);
+        const invoice = await db.prepare('SELECT status FROM invoices WHERE id = ?').get(req.params.id);
         if (!invoice) {
             return res.status(404).json({ error: 'Invoice not found' });
         }
@@ -222,7 +220,7 @@ router.delete('/:id', authenticate, isDispatcher, (req, res) => {
             return res.status(400).json({ error: 'Only draft invoices can be deleted' });
         }
 
-        db.prepare('DELETE FROM invoices WHERE id = ?').run(req.params.id);
+        await db.prepare('DELETE FROM invoices WHERE id = ?').run(req.params.id);
         res.json({ message: 'Invoice deleted' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete invoice' });

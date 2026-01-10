@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import initSqlJs from 'sql.js';
+import pg from 'pg';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
@@ -27,107 +27,112 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Database wrapper to provide better-sqlite3-like API
+// Database wrapper to provide better-sqlite3-like API for PostgreSQL
 class DatabaseWrapper {
-    constructor(sqlDb, dbPath) {
-        this.db = sqlDb;
-        this.dbPath = dbPath;
+    constructor(pool) {
+        this.pool = pool;
     }
 
     prepare(sql) {
-        const db = this.db;
-        const dbPath = this.dbPath;
+        const pool = this.pool;
+        // Convert ? placeholders to $1, $2, etc. for PostgreSQL
+        let paramIndex = 0;
+        const pgSql = sql.replace(/\?/g, () => `$${++paramIndex}`);
+
         return {
-            run(...params) {
-                const stmt = db.prepare(sql);
-                if (params.length > 0) {
-                    stmt.bind(params);
-                }
-                stmt.step();
-                stmt.free();
-                const result = { changes: db.getRowsModified(), lastInsertRowid: 0 };
-                // Get last insert id
-                const lastId = db.exec("SELECT last_insert_rowid() as id");
-                if (lastId.length > 0 && lastId[0].values.length > 0) {
-                    result.lastInsertRowid = lastId[0].values[0][0];
-                }
-                // Save to file
-                const data = db.export();
-                fs.writeFileSync(dbPath, Buffer.from(data));
-                return result;
+            async run(...params) {
+                const result = await pool.query(pgSql, params);
+                return {
+                    changes: result.rowCount,
+                    lastInsertRowid: result.rows[0]?.id || 0
+                };
             },
-            get(...params) {
-                const stmt = db.prepare(sql);
-                stmt.bind(params);
-                if (stmt.step()) {
-                    const row = stmt.getAsObject();
-                    stmt.free();
-                    return row;
-                }
-                stmt.free();
-                return undefined;
+            async get(...params) {
+                const result = await pool.query(pgSql, params);
+                return result.rows[0] || undefined;
             },
-            all(...params) {
-                const results = [];
-                const stmt = db.prepare(sql);
-                stmt.bind(params);
-                while (stmt.step()) {
-                    results.push(stmt.getAsObject());
-                }
-                stmt.free();
-                return results;
+            async all(...params) {
+                const result = await pool.query(pgSql, params);
+                return result.rows;
             }
         };
     }
+}
 
-    exec(sql) {
-        this.db.run(sql);
-        const data = this.db.export();
-        fs.writeFileSync(this.dbPath, Buffer.from(data));
+// Async database wrapper for PostgreSQL
+class AsyncDatabaseWrapper {
+    constructor(pool) {
+        this.pool = pool;
+    }
+
+    prepare(sql) {
+        const pool = this.pool;
+        // Convert ? placeholders to $1, $2, etc. for PostgreSQL
+        let paramIndex = 0;
+        const pgSql = sql.replace(/\?/g, () => `$${++paramIndex}`);
+
+        // For INSERT statements, add RETURNING id to get lastInsertRowid
+        const isInsert = sql.trim().toUpperCase().startsWith('INSERT');
+        const finalSql = isInsert && !pgSql.toUpperCase().includes('RETURNING')
+            ? pgSql + ' RETURNING id'
+            : pgSql;
+
+        return {
+            run: async (...params) => {
+                const result = await pool.query(finalSql, params);
+                return {
+                    changes: result.rowCount,
+                    lastInsertRowid: result.rows[0]?.id || 0
+                };
+            },
+            get: async (...params) => {
+                const result = await pool.query(finalSql, params);
+                return result.rows[0] || undefined;
+            },
+            all: async (...params) => {
+                const result = await pool.query(finalSql, params);
+                return result.rows;
+            }
+        };
     }
 }
 
 // Initialize database and start server
 async function start() {
-    const SQL = await initSqlJs();
+    // Create PostgreSQL connection pool
+    const pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    });
 
-    // Use local data folder in production, ../database in development
-    const devDbPath = join(__dirname, '..', 'database', 'trashperson.db');
-    const prodDbPath = join(__dirname, 'data', 'trashperson.db');
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    // Ensure data directory exists in production
-    if (isProduction && !fs.existsSync(join(__dirname, 'data'))) {
-        fs.mkdirSync(join(__dirname, 'data'), { recursive: true });
+    // Test connection
+    try {
+        await pool.query('SELECT NOW()');
+        console.log('Connected to PostgreSQL database');
+    } catch (err) {
+        console.error('Failed to connect to database:', err.message);
+        process.exit(1);
     }
 
-    const dbPath = isProduction ? prodDbPath : (fs.existsSync(devDbPath) ? devDbPath : prodDbPath);
-    let db;
-
-    // Load existing database or create new one
-    if (fs.existsSync(dbPath)) {
-        const buffer = fs.readFileSync(dbPath);
-        db = new SQL.Database(buffer);
-    } else {
-        db = new SQL.Database();
-    }
-
-    const dbWrapper = new DatabaseWrapper(db, dbPath);
-
-    // Run schema - check both locations
-    const devSchemaPath = join(__dirname, '..', 'database', 'schema.sql');
-    const prodSchemaPath = join(__dirname, 'schema.sql');
+    // Run schema
+    const devSchemaPath = join(__dirname, '..', 'database', 'schema-postgres.sql');
+    const prodSchemaPath = join(__dirname, 'schema-postgres.sql');
     const schemaPath = fs.existsSync(devSchemaPath) ? devSchemaPath : prodSchemaPath;
 
     if (fs.existsSync(schemaPath)) {
         const schema = fs.readFileSync(schemaPath, 'utf8');
-        db.exec(schema);  // exec() handles multiple statements, run() does not
-        const data = db.export();
-        fs.writeFileSync(dbPath, Buffer.from(data));
+        try {
+            await pool.query(schema);
+            console.log('Database schema initialized');
+        } catch (err) {
+            // Schema might already exist, that's ok
+            console.log('Schema initialization:', err.message.includes('already exists') ? 'Tables exist' : err.message);
+        }
     }
 
-    // Make db available to routes
-    app.locals.db = dbWrapper;
+    // Make db available to routes - using async wrapper
+    app.locals.db = new AsyncDatabaseWrapper(pool);
+    app.locals.pool = pool;  // Also expose pool directly for complex queries
 
     // Routes
     app.use('/api/auth', authRoutes);
@@ -139,21 +144,23 @@ async function start() {
     app.use('/api/services', serviceRoutes);
 
     // Health check
-    app.get('/api/health', (req, res) => {
-        const db = req.app.locals.db;
-        let tableCount = 0;
+    app.get('/api/health', async (req, res) => {
         try {
-            const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-            tableCount = tables.length;
+            const result = await pool.query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'public'");
+            res.json({
+                status: 'ok',
+                timestamp: new Date().toISOString(),
+                tables: parseInt(result.rows[0].count),
+                env: process.env.NODE_ENV || 'not set',
+                database: 'postgresql'
+            });
         } catch (e) {
-            tableCount = -1;
+            res.json({
+                status: 'error',
+                timestamp: new Date().toISOString(),
+                error: e.message
+            });
         }
-        res.json({
-            status: 'ok',
-            timestamp: new Date().toISOString(),
-            tables: tableCount,
-            env: process.env.NODE_ENV || 'not set'
-        });
     });
 
     // Error handling middleware

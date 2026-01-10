@@ -4,10 +4,10 @@ import { authenticate, isDispatcher } from '../middleware/auth.js';
 const router = express.Router();
 
 // Get all leads
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const leads = db.prepare(`
+        const leads = await db.prepare(`
             SELECT l.*, u.name as assigned_to_name
             FROM leads l
             LEFT JOIN users u ON u.id = l.assigned_to
@@ -20,10 +20,10 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Get leads by stage
-router.get('/stage/:stage', authenticate, (req, res) => {
+router.get('/stage/:stage', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const leads = db.prepare(`
+        const leads = await db.prepare(`
             SELECT l.*, u.name as assigned_to_name
             FROM leads l
             LEFT JOIN users u ON u.id = l.assigned_to
@@ -37,10 +37,10 @@ router.get('/stage/:stage', authenticate, (req, res) => {
 });
 
 // Get single lead
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const lead = db.prepare(`
+        const lead = await db.prepare(`
             SELECT l.*, u.name as assigned_to_name
             FROM leads l
             LEFT JOIN users u ON u.id = l.assigned_to
@@ -57,7 +57,7 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // Create lead
-router.post('/', authenticate, isDispatcher, (req, res) => {
+router.post('/', authenticate, isDispatcher, async (req, res) => {
     const { name, email, phone, address, source, stage = 'new', notes, follow_up_date, assigned_to } = req.body;
     const db = req.app.locals.db;
 
@@ -66,12 +66,12 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
     }
 
     try {
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO leads (name, email, phone, address, source, stage, notes, follow_up_date, assigned_to)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(name, email, phone, address, source, stage, notes, follow_up_date, assigned_to);
+        `).run(name, email || null, phone || null, address || null, source || null, stage, notes || null, follow_up_date || null, assigned_to || null);
 
-        db.prepare(
+        await db.prepare(
             'INSERT INTO activity_log (entity_type, entity_id, action, user_id) VALUES (?, ?, ?, ?)'
         ).run('lead', result.lastInsertRowid, 'created', req.user.id);
 
@@ -86,12 +86,12 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
 });
 
 // Update lead
-router.put('/:id', authenticate, isDispatcher, (req, res) => {
+router.put('/:id', authenticate, isDispatcher, async (req, res) => {
     const { name, email, phone, address, source, stage, notes, follow_up_date, assigned_to } = req.body;
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare(`
+        const result = await db.prepare(`
             UPDATE leads SET
                 name = ?, email = ?, phone = ?, address = ?, source = ?,
                 stage = ?, notes = ?, follow_up_date = ?, assigned_to = ?,
@@ -103,7 +103,7 @@ router.put('/:id', authenticate, isDispatcher, (req, res) => {
             return res.status(404).json({ error: 'Lead not found' });
         }
 
-        db.prepare(
+        await db.prepare(
             'INSERT INTO activity_log (entity_type, entity_id, action, details, user_id) VALUES (?, ?, ?, ?, ?)'
         ).run('lead', req.params.id, 'updated', `Stage: ${stage}`, req.user.id);
 
@@ -114,25 +114,25 @@ router.put('/:id', authenticate, isDispatcher, (req, res) => {
 });
 
 // Convert lead to customer
-router.post('/:id/convert', authenticate, isDispatcher, (req, res) => {
+router.post('/:id/convert', authenticate, isDispatcher, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
+        const lead = await db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
         if (!lead) {
             return res.status(404).json({ error: 'Lead not found' });
         }
 
         // Create customer from lead
-        const result = db.prepare(
+        const result = await db.prepare(
             'INSERT INTO customers (name, email, phone, notes) VALUES (?, ?, ?, ?)'
         ).run(lead.name, lead.email, lead.phone, lead.notes);
 
         // Update lead status
-        db.prepare("UPDATE leads SET stage = 'won', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.params.id);
+        await db.prepare("UPDATE leads SET stage = 'won', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(req.params.id);
 
         // Log activity
-        db.prepare(
+        await db.prepare(
             'INSERT INTO activity_log (entity_type, entity_id, action, details, user_id) VALUES (?, ?, ?, ?, ?)'
         ).run('lead', req.params.id, 'converted', `Customer ID: ${result.lastInsertRowid}`, req.user.id);
 
@@ -147,11 +147,11 @@ router.post('/:id/convert', authenticate, isDispatcher, (req, res) => {
 });
 
 // Delete lead
-router.delete('/:id', authenticate, isDispatcher, (req, res) => {
+router.delete('/:id', authenticate, isDispatcher, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
+        const result = await db.prepare('DELETE FROM leads WHERE id = ?').run(req.params.id);
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Lead not found' });
         }

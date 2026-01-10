@@ -4,7 +4,7 @@ import { authenticate, isDispatcher, isDriver } from '../middleware/auth.js';
 const router = express.Router();
 
 // Get all routes
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     const { date, assigned_to, status } = req.query;
 
@@ -35,7 +35,7 @@ router.get('/', authenticate, (req, res) => {
     sql += ' GROUP BY r.id ORDER BY r.date DESC, r.name';
 
     try {
-        const routes = db.prepare(sql).all(...params);
+        const routes = await db.prepare(sql).all(...params);
         res.json(routes);
     } catch (error) {
         console.error('Error fetching routes:', error);
@@ -44,10 +44,10 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Get single route with stops
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const route = db.prepare(`
+        const route = await db.prepare(`
             SELECT r.*, u.name as assigned_to_name
             FROM routes r
             LEFT JOIN users u ON u.id = r.assigned_to
@@ -58,7 +58,7 @@ router.get('/:id', authenticate, (req, res) => {
             return res.status(404).json({ error: 'Route not found' });
         }
 
-        const stops = db.prepare(`
+        const stops = await db.prepare(`
             SELECT rs.*,
                    ap.scheduled_time,
                    c.name as customer_name, c.phone as customer_phone,
@@ -80,7 +80,7 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // Create route
-router.post('/', authenticate, isDispatcher, (req, res) => {
+router.post('/', authenticate, isDispatcher, async (req, res) => {
     const { name, date, assigned_to, appointment_ids } = req.body;
     const db = req.app.locals.db;
 
@@ -89,18 +89,17 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
     }
 
     try {
-        const result = db.prepare(
+        const result = await db.prepare(
             'INSERT INTO routes (name, date, assigned_to) VALUES (?, ?, ?)'
-        ).run(name, date, assigned_to);
+        ).run(name, date, assigned_to || null);
 
         // Add stops if appointment IDs provided
         if (appointment_ids && appointment_ids.length > 0) {
-            const insertStop = db.prepare(
-                'INSERT INTO route_stops (route_id, appointment_id, stop_order) VALUES (?, ?, ?)'
-            );
-            appointment_ids.forEach((apptId, index) => {
-                insertStop.run(result.lastInsertRowid, apptId, index + 1);
-            });
+            for (let i = 0; i < appointment_ids.length; i++) {
+                await db.prepare(
+                    'INSERT INTO route_stops (route_id, appointment_id, stop_order) VALUES (?, ?, ?)'
+                ).run(result.lastInsertRowid, appointment_ids[i], i + 1);
+            }
         }
 
         res.status(201).json({
@@ -117,7 +116,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
 });
 
 // Add stops to route
-router.post('/:id/stops', authenticate, isDispatcher, (req, res) => {
+router.post('/:id/stops', authenticate, isDispatcher, async (req, res) => {
     const { appointment_ids } = req.body;
     const db = req.app.locals.db;
 
@@ -127,18 +126,16 @@ router.post('/:id/stops', authenticate, isDispatcher, (req, res) => {
 
     try {
         // Get current max order
-        const maxOrder = db.prepare(
+        const maxOrder = await db.prepare(
             'SELECT MAX(stop_order) as max FROM route_stops WHERE route_id = ?'
         ).get(req.params.id);
         let order = (maxOrder.max || 0) + 1;
 
-        const insertStop = db.prepare(
-            'INSERT INTO route_stops (route_id, appointment_id, stop_order) VALUES (?, ?, ?)'
-        );
-
         const inserted = [];
         for (const apptId of appointment_ids) {
-            const result = insertStop.run(req.params.id, apptId, order++);
+            const result = await db.prepare(
+                'INSERT INTO route_stops (route_id, appointment_id, stop_order) VALUES (?, ?, ?)'
+            ).run(req.params.id, apptId, order++);
             inserted.push({ id: result.lastInsertRowid, appointment_id: apptId });
         }
 
@@ -150,17 +147,15 @@ router.post('/:id/stops', authenticate, isDispatcher, (req, res) => {
 });
 
 // Reorder stops
-router.put('/:id/stops/reorder', authenticate, isDispatcher, (req, res) => {
+router.put('/:id/stops/reorder', authenticate, isDispatcher, async (req, res) => {
     const { stop_order } = req.body; // Array of { stop_id, order }
     const db = req.app.locals.db;
 
     try {
-        const updateOrder = db.prepare(
-            'UPDATE route_stops SET stop_order = ? WHERE id = ? AND route_id = ?'
-        );
-
         for (const item of stop_order) {
-            updateOrder.run(item.order, item.stop_id, req.params.id);
+            await db.prepare(
+                'UPDATE route_stops SET stop_order = ? WHERE id = ? AND route_id = ?'
+            ).run(item.order, item.stop_id, req.params.id);
         }
 
         res.json({ message: 'Stops reordered' });
@@ -170,7 +165,7 @@ router.put('/:id/stops/reorder', authenticate, isDispatcher, (req, res) => {
 });
 
 // Update stop status (drivers can do this)
-router.patch('/:routeId/stops/:stopId', authenticate, isDriver, (req, res) => {
+router.patch('/:routeId/stops/:stopId', authenticate, isDriver, async (req, res) => {
     const { status, notes } = req.body;
     const db = req.app.locals.db;
 
@@ -201,7 +196,7 @@ router.patch('/:routeId/stops/:stopId', authenticate, isDriver, (req, res) => {
 
         params.push(req.params.stopId, req.params.routeId);
 
-        const result = db.prepare(`
+        const result = await db.prepare(`
             UPDATE route_stops SET ${updates.join(', ')}
             WHERE id = ? AND route_id = ?
         `).run(...params);
@@ -212,9 +207,9 @@ router.patch('/:routeId/stops/:stopId', authenticate, isDriver, (req, res) => {
 
         // Also update the appointment status if stop is completed
         if (status === 'completed') {
-            const stop = db.prepare('SELECT appointment_id FROM route_stops WHERE id = ?').get(req.params.stopId);
+            const stop = await db.prepare('SELECT appointment_id FROM route_stops WHERE id = ?').get(req.params.stopId);
             if (stop) {
-                db.prepare("UPDATE appointments SET status = 'completed' WHERE id = ?").run(stop.appointment_id);
+                await db.prepare("UPDATE appointments SET status = 'completed' WHERE id = ?").run(stop.appointment_id);
             }
         }
 
@@ -225,7 +220,7 @@ router.patch('/:routeId/stops/:stopId', authenticate, isDriver, (req, res) => {
 });
 
 // Update route status
-router.patch('/:id/status', authenticate, isDriver, (req, res) => {
+router.patch('/:id/status', authenticate, isDriver, async (req, res) => {
     const { status } = req.body;
     const db = req.app.locals.db;
 
@@ -235,7 +230,7 @@ router.patch('/:id/status', authenticate, isDriver, (req, res) => {
     }
 
     try {
-        const result = db.prepare('UPDATE routes SET status = ? WHERE id = ?').run(status, req.params.id);
+        const result = await db.prepare('UPDATE routes SET status = ? WHERE id = ?').run(status, req.params.id);
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Route not found' });
         }
@@ -246,11 +241,11 @@ router.patch('/:id/status', authenticate, isDriver, (req, res) => {
 });
 
 // Delete route
-router.delete('/:id', authenticate, isDispatcher, (req, res) => {
+router.delete('/:id', authenticate, isDispatcher, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare('DELETE FROM routes WHERE id = ?').run(req.params.id);
+        const result = await db.prepare('DELETE FROM routes WHERE id = ?').run(req.params.id);
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Route not found' });
         }

@@ -4,10 +4,10 @@ import { authenticate, isAdmin } from '../middleware/auth.js';
 const router = express.Router();
 
 // Get all services
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const services = db.prepare('SELECT * FROM services ORDER BY name').all();
+        const services = await db.prepare('SELECT * FROM services ORDER BY name').all();
         res.json(services);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch services' });
@@ -15,10 +15,10 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Get single service
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const service = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
+        const service = await db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
         if (!service) {
             return res.status(404).json({ error: 'Service not found' });
         }
@@ -29,7 +29,7 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // Create service (admin only)
-router.post('/', authenticate, isAdmin, (req, res) => {
+router.post('/', authenticate, isAdmin, async (req, res) => {
     const { name, description, price, is_recurring } = req.body;
     const db = req.app.locals.db;
 
@@ -38,9 +38,9 @@ router.post('/', authenticate, isAdmin, (req, res) => {
     }
 
     try {
-        const result = db.prepare(
+        const result = await db.prepare(
             'INSERT INTO services (name, description, price, is_recurring) VALUES (?, ?, ?, ?)'
-        ).run(name, description, price, is_recurring ? 1 : 0);
+        ).run(name, description || null, price, is_recurring ? 1 : 0);
 
         res.status(201).json({
             id: result.lastInsertRowid,
@@ -56,12 +56,12 @@ router.post('/', authenticate, isAdmin, (req, res) => {
 });
 
 // Update service (admin only)
-router.put('/:id', authenticate, isAdmin, (req, res) => {
+router.put('/:id', authenticate, isAdmin, async (req, res) => {
     const { name, description, price, is_recurring } = req.body;
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare(`
+        const result = await db.prepare(`
             UPDATE services SET name = ?, description = ?, price = ?, is_recurring = ?
             WHERE id = ?
         `).run(name, description, price, is_recurring ? 1 : 0, req.params.id);
@@ -77,11 +77,11 @@ router.put('/:id', authenticate, isAdmin, (req, res) => {
 });
 
 // Delete service (admin only)
-router.delete('/:id', authenticate, isAdmin, (req, res) => {
+router.delete('/:id', authenticate, isAdmin, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare('DELETE FROM services WHERE id = ?').run(req.params.id);
+        const result = await db.prepare('DELETE FROM services WHERE id = ?').run(req.params.id);
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Service not found' });
         }

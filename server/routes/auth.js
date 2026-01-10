@@ -6,7 +6,7 @@ import { authenticate } from '../middleware/auth.js';
 const router = express.Router();
 
 // Register new user
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
     const { email, password, name, role = 'driver' } = req.body;
     const db = req.app.locals.db;
 
@@ -16,7 +16,7 @@ router.post('/register', (req, res) => {
 
     try {
         // Check if user exists
-        const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+        const existing = await db.prepare('SELECT id FROM users WHERE email = $1').get(email);
         if (existing) {
             return res.status(400).json({ error: 'Email already registered' });
         }
@@ -25,19 +25,21 @@ router.post('/register', (req, res) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
 
         // Insert user
-        const result = db.prepare(
-            'INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)'
+        const result = await db.prepare(
+            'INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4) RETURNING id'
         ).run(email, hashedPassword, name, role);
+
+        const userId = result.lastInsertRowid;
 
         // Generate token
         const token = jwt.sign(
-            { id: result.lastInsertRowid, email, name, role },
+            { id: userId, email, name, role },
             process.env.JWT_SECRET || 'dev-secret',
             { expiresIn: '7d' }
         );
 
         res.status(201).json({
-            user: { id: result.lastInsertRowid, email, name, role },
+            user: { id: userId, email, name, role },
             token
         });
     } catch (error) {
@@ -47,7 +49,7 @@ router.post('/register', (req, res) => {
 });
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     const db = req.app.locals.db;
 
@@ -56,7 +58,7 @@ router.post('/login', (req, res) => {
     }
 
     try {
-        const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+        const user = await db.prepare('SELECT * FROM users WHERE email = $1').get(email);
 
         if (!user || !bcrypt.compareSync(password, user.password)) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -79,11 +81,11 @@ router.post('/login', (req, res) => {
 });
 
 // Get current user
-router.get('/me', authenticate, (req, res) => {
+router.get('/me', authenticate, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const user = db.prepare('SELECT id, email, name, role FROM users WHERE id = ?').get(req.user.id);
+        const user = await db.prepare('SELECT id, email, name, role FROM users WHERE id = $1').get(req.user.id);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }

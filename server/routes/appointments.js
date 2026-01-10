@@ -4,7 +4,7 @@ import { authenticate, isDispatcher, isDriver } from '../middleware/auth.js';
 const router = express.Router();
 
 // Get all appointments
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     const { date, status, assigned_to } = req.query;
 
@@ -40,7 +40,7 @@ router.get('/', authenticate, (req, res) => {
     sql += ' ORDER BY ap.scheduled_date, ap.scheduled_time';
 
     try {
-        const appointments = db.prepare(sql).all(...params);
+        const appointments = await db.prepare(sql).all(...params);
         res.json(appointments);
     } catch (error) {
         console.error('Error fetching appointments:', error);
@@ -49,7 +49,7 @@ router.get('/', authenticate, (req, res) => {
 });
 
 // Get appointments for date range (calendar view)
-router.get('/range', authenticate, (req, res) => {
+router.get('/range', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     const { start, end } = req.query;
 
@@ -58,7 +58,7 @@ router.get('/range', authenticate, (req, res) => {
     }
 
     try {
-        const appointments = db.prepare(`
+        const appointments = await db.prepare(`
             SELECT ap.*,
                    c.name as customer_name,
                    a.street, a.city,
@@ -77,10 +77,10 @@ router.get('/range', authenticate, (req, res) => {
 });
 
 // Get single appointment
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
     const db = req.app.locals.db;
     try {
-        const appointment = db.prepare(`
+        const appointment = await db.prepare(`
             SELECT ap.*,
                    c.name as customer_name, c.phone as customer_phone, c.email as customer_email,
                    a.street, a.city, a.state, a.zip, a.lat, a.lng,
@@ -104,7 +104,7 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 // Create appointment
-router.post('/', authenticate, isDispatcher, (req, res) => {
+router.post('/', authenticate, isDispatcher, async (req, res) => {
     const {
         customer_id, address_id, service_id, assigned_to,
         scheduled_date, scheduled_time, is_recurring, recurrence_pattern, notes
@@ -116,12 +116,12 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
     }
 
     try {
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO appointments (customer_id, address_id, service_id, assigned_to, scheduled_date, scheduled_time, is_recurring, recurrence_pattern, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(customer_id, address_id, service_id, assigned_to, scheduled_date, scheduled_time, is_recurring ? 1 : 0, recurrence_pattern, notes);
+        `).run(customer_id, address_id, service_id || null, assigned_to || null, scheduled_date, scheduled_time || null, is_recurring ? 1 : 0, recurrence_pattern || null, notes || null);
 
-        db.prepare(
+        await db.prepare(
             'INSERT INTO activity_log (entity_type, entity_id, action, user_id) VALUES (?, ?, ?, ?)'
         ).run('appointment', result.lastInsertRowid, 'created', req.user.id);
 
@@ -138,7 +138,7 @@ router.post('/', authenticate, isDispatcher, (req, res) => {
 });
 
 // Update appointment
-router.put('/:id', authenticate, isDispatcher, (req, res) => {
+router.put('/:id', authenticate, isDispatcher, async (req, res) => {
     const {
         customer_id, address_id, service_id, assigned_to,
         scheduled_date, scheduled_time, status, is_recurring, recurrence_pattern, notes
@@ -146,7 +146,7 @@ router.put('/:id', authenticate, isDispatcher, (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare(`
+        const result = await db.prepare(`
             UPDATE appointments SET
                 customer_id = ?, address_id = ?, service_id = ?, assigned_to = ?,
                 scheduled_date = ?, scheduled_time = ?, status = ?,
@@ -166,7 +166,7 @@ router.put('/:id', authenticate, isDispatcher, (req, res) => {
 });
 
 // Update appointment status (drivers can do this)
-router.patch('/:id/status', authenticate, isDriver, (req, res) => {
+router.patch('/:id/status', authenticate, isDriver, async (req, res) => {
     const { status } = req.body;
     const db = req.app.locals.db;
 
@@ -176,7 +176,7 @@ router.patch('/:id/status', authenticate, isDriver, (req, res) => {
     }
 
     try {
-        const result = db.prepare(
+        const result = await db.prepare(
             'UPDATE appointments SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
         ).run(status, req.params.id);
 
@@ -184,7 +184,7 @@ router.patch('/:id/status', authenticate, isDriver, (req, res) => {
             return res.status(404).json({ error: 'Appointment not found' });
         }
 
-        db.prepare(
+        await db.prepare(
             'INSERT INTO activity_log (entity_type, entity_id, action, details, user_id) VALUES (?, ?, ?, ?, ?)'
         ).run('appointment', req.params.id, 'status_changed', status, req.user.id);
 
@@ -195,11 +195,11 @@ router.patch('/:id/status', authenticate, isDriver, (req, res) => {
 });
 
 // Delete appointment
-router.delete('/:id', authenticate, isDispatcher, (req, res) => {
+router.delete('/:id', authenticate, isDispatcher, async (req, res) => {
     const db = req.app.locals.db;
 
     try {
-        const result = db.prepare('DELETE FROM appointments WHERE id = ?').run(req.params.id);
+        const result = await db.prepare('DELETE FROM appointments WHERE id = ?').run(req.params.id);
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Appointment not found' });
         }
