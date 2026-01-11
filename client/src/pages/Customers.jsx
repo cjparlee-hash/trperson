@@ -56,9 +56,13 @@ function Customers() {
             if (response.ok) {
                 fetchCustomers();
                 closeModal();
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.error || 'Failed to save customer'}`);
             }
         } catch (error) {
             console.error('Error saving customer:', error);
+            alert(`Error: ${error.message}`);
         }
     };
 

@@ -67,9 +67,13 @@ function Leads() {
             if (response.ok) {
                 fetchLeads();
                 closeModal();
+            } else {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.error || 'Failed to save lead'}`);
             }
         } catch (error) {
             console.error('Error saving lead:', error);
+            alert(`Error: ${error.message}`);
         }
     };
 
