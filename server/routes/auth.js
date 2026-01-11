@@ -7,7 +7,7 @@ const router = express.Router();
 
 // Register new user
 router.post('/register', async (req, res) => {
-    const { email, password, name, role = 'driver' } = req.body;
+    const { email, password, name, role = 'admin' } = req.body;
     const db = req.app.locals.db;
 
     if (!email || !password || !name) {
