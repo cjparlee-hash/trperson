@@ -272,8 +272,8 @@ function Leads() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 my-auto">
                         <div className="px-6 py-4 border-b border-gray-200">
                             <h3 className="text-lg font-semibold">{selectedLead ? 'Edit Lead' : 'Add Lead'}</h3>
                         </div>
