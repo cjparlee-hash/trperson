@@ -40,8 +40,8 @@ function Customers() {
 
         try {
             const url = selectedCustomer
-                ? `/api/customers/${selectedCustomer.id}`
-                : '/api/customers';
+                ? `${API_URL}/api/customers/${selectedCustomer.id}`
+                : `${API_URL}/api/customers`;
             const method = selectedCustomer ? 'PUT' : 'POST';
 
             const response = await fetch(url, {

@@ -52,7 +52,7 @@ function Leads() {
         const token = localStorage.getItem('token');
 
         try {
-            const url = selectedLead ? `/api/leads/${selectedLead.id}` : '/api/leads';
+            const url = selectedLead ? `${API_URL}/api/leads/${selectedLead.id}` : `${API_URL}/api/leads`;
             const method = selectedLead ? 'PUT' : 'POST';
 
             const response = await fetch(url, {
