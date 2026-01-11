@@ -81,7 +81,7 @@ router.post('/', authenticate, isDispatcher, async (req, res) => {
         });
     } catch (error) {
         console.error('Error creating lead:', error);
-        res.status(500).json({ error: 'Failed to create lead' });
+        res.status(500).json({ error: 'Failed to create lead', details: error.message });
     }
 });
 
