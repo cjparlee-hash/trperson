@@ -91,7 +91,7 @@ router.get('/', authenticate, async (req, res) => {
         params.push(status);
     }
 
-    sql += ' GROUP BY r.id ORDER BY r.date DESC, r.name';
+    sql += ' GROUP BY r.id, r.name, r.date, r.assigned_to, r.status, r.created_at, u.name ORDER BY r.date DESC, r.name';
 
     try {
         const routes = await db.prepare(sql).all(...params);
