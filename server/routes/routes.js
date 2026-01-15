@@ -3,6 +3,65 @@ import { authenticate, isDispatcher, isDriver } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Haversine formula - calculates distance between two lat/lng points in miles
+function haversineDistance(lat1, lng1, lat2, lng2) {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Calculate total distance for a sequence of stops
+function calculateTotalDistance(stops) {
+    let total = 0;
+    for (let i = 0; i < stops.length - 1; i++) {
+        total += haversineDistance(
+            stops[i].lat, stops[i].lng,
+            stops[i + 1].lat, stops[i + 1].lng
+        );
+    }
+    return total;
+}
+
+// Nearest neighbor TSP algorithm
+function nearestNeighborTSP(stops) {
+    if (stops.length <= 1) return stops;
+
+    const result = [];
+    const remaining = [...stops];
+
+    // Start with the first stop
+    result.push(remaining.shift());
+
+    while (remaining.length > 0) {
+        const current = result[result.length - 1];
+        let nearestIdx = 0;
+        let nearestDist = Infinity;
+
+        // Find nearest unvisited stop
+        for (let i = 0; i < remaining.length; i++) {
+            const dist = haversineDistance(
+                current.lat, current.lng,
+                remaining[i].lat, remaining[i].lng
+            );
+            if (dist < nearestDist) {
+                nearestDist = dist;
+                nearestIdx = i;
+            }
+        }
+
+        result.push(remaining.splice(nearestIdx, 1)[0]);
+    }
+
+    return result;
+}
+
+
+
 // Get all routes
 router.get('/', authenticate, async (req, res) => {
     const db = req.app.locals.db;
@@ -73,11 +132,109 @@ router.get('/:id', authenticate, async (req, res) => {
             ORDER BY rs.stop_order
         `).all(req.params.id);
 
-        res.json({ ...route, stops });
+        // Calculate total distance if stops have coordinates
+        const stopsWithCoords = stops.filter(s => s.lat && s.lng);
+        const totalDistance = stopsWithCoords.length > 1
+            ? calculateTotalDistance(stopsWithCoords)
+            : 0;
+
+        res.json({ ...route, stops, totalDistance: Math.round(totalDistance * 10) / 10 });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch route' });
     }
 });
+
+// Optimize route stops
+router.post('/:id/optimize', authenticate, isDispatcher, async (req, res) => {
+    const db = req.app.locals.db;
+    const routeId = req.params.id;
+
+    try {
+        // Fetch all stops with coordinates
+        const stops = await db.prepare(`
+            SELECT rs.*,
+                   ap.scheduled_time,
+                   c.name as customer_name, c.phone as customer_phone,
+                   a.street, a.city, a.state, a.zip, a.lat, a.lng,
+                   s.name as service_name
+            FROM route_stops rs
+            JOIN appointments ap ON ap.id = rs.appointment_id
+            JOIN customers c ON c.id = ap.customer_id
+            JOIN addresses a ON a.id = ap.address_id
+            LEFT JOIN services s ON s.id = ap.service_id
+            WHERE rs.route_id = ?
+            ORDER BY rs.stop_order
+        `).all(routeId);
+
+        if (stops.length === 0) {
+            return res.status(400).json({ error: 'No stops to optimize' });
+        }
+
+        // Separate stops with and without coordinates
+        const stopsWithCoords = stops.filter(s => s.lat && s.lng);
+        const stopsWithoutCoords = stops.filter(s => !s.lat || !s.lng);
+
+        if (stopsWithCoords.length < 2) {
+            return res.status(400).json({
+                error: 'Need at least 2 stops with coordinates to optimize',
+                stopsWithoutCoords: stopsWithoutCoords.length
+            });
+        }
+
+        // Calculate distance before optimization
+        const distanceBefore = calculateTotalDistance(stopsWithCoords);
+
+        // Run nearest neighbor optimization
+        const optimizedStops = nearestNeighborTSP(stopsWithCoords);
+
+        // Calculate distance after optimization
+        const distanceAfter = calculateTotalDistance(optimizedStops);
+
+        // Update stop order in database
+        for (let i = 0; i < optimizedStops.length; i++) {
+            await db.prepare(
+                'UPDATE route_stops SET stop_order = ? WHERE id = ?'
+            ).run(i + 1, optimizedStops[i].id);
+        }
+
+        // Put stops without coordinates at the end
+        for (let i = 0; i < stopsWithoutCoords.length; i++) {
+            await db.prepare(
+                'UPDATE route_stops SET stop_order = ? WHERE id = ?'
+            ).run(optimizedStops.length + i + 1, stopsWithoutCoords[i].id);
+        }
+
+        // Fetch updated stops
+        const updatedStops = await db.prepare(`
+            SELECT rs.*,
+                   ap.scheduled_time,
+                   c.name as customer_name, c.phone as customer_phone,
+                   a.street, a.city, a.state, a.zip, a.lat, a.lng,
+                   s.name as service_name
+            FROM route_stops rs
+            JOIN appointments ap ON ap.id = rs.appointment_id
+            JOIN customers c ON c.id = ap.customer_id
+            JOIN addresses a ON a.id = ap.address_id
+            LEFT JOIN services s ON s.id = ap.service_id
+            WHERE rs.route_id = ?
+            ORDER BY rs.stop_order
+        `).all(routeId);
+
+        res.json({
+            message: 'Route optimized',
+            stops: updatedStops,
+            distanceBefore: Math.round(distanceBefore * 10) / 10,
+            distanceAfter: Math.round(distanceAfter * 10) / 10,
+            distanceSaved: Math.round((distanceBefore - distanceAfter) * 10) / 10,
+            distanceUnit: 'miles',
+            stopsWithoutCoords: stopsWithoutCoords.length
+        });
+    } catch (error) {
+        console.error('Error optimizing route:', error);
+        res.status(500).json({ error: 'Failed to optimize route' });
+    }
+});
+
 
 // Create route
 router.post('/', authenticate, isDispatcher, async (req, res) => {

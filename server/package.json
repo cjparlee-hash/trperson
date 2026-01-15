@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "dev:sqlite": "node --watch index-sqlite.js",
+    "seed": "node seed-sqlite.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

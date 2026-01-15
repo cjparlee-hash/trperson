@@ -9,6 +9,8 @@ function RoutePlanner() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedRoute, setSelectedRoute] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [optimizing, setOptimizing] = useState(false);
+    const [optimizeResult, setOptimizeResult] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
         date: '',
@@ -205,6 +207,55 @@ function RoutePlanner() {
         window.open(url, '_blank');
     };
 
+    
+
+    const handleOptimize = async () => {
+        if (!selectedRoute) return;
+
+        setOptimizing(true);
+        setOptimizeResult(null);
+        const token = localStorage.getItem('token');
+
+        try {
+            const response = await fetch(`${API_URL}/api/routes/${selectedRoute.id}/optimize`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setOptimizeResult({
+                    success: true,
+                    distanceSaved: data.distanceSaved,
+                    distanceAfter: data.distanceAfter
+                });
+                // Refresh route details with new order
+                setSelectedRoute(prev => ({
+                    ...prev,
+                    stops: data.stops,
+                    totalDistance: data.distanceAfter
+                }));
+            } else {
+                setOptimizeResult({
+                    success: false,
+                    error: data.error
+                });
+            }
+        } catch (error) {
+            console.error('Error optimizing route:', error);
+            setOptimizeResult({
+                success: false,
+                error: 'Failed to optimize route'
+            });
+        } finally {
+            setOptimizing(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -284,17 +335,58 @@ function RoutePlanner() {
                         <>
                             {/* Map */}
                             <div className="bg-white rounded-lg shadow">
-                                <div className="px-4 py-3 border-b flex justify-between items-center">
-                                    <span className="font-semibold">{selectedRoute.name}</span>
-                                    <button
-                                        onClick={openInGoogleMaps}
-                                        className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
-                                    >
-                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                        Open in Google Maps
-                                    </button>
+                                <div className="px-4 py-3 border-b">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <span className="font-semibold">{selectedRoute.name}</span>
+                                            {selectedRoute.totalDistance > 0 && (
+                                                <span className="ml-2 text-sm text-gray-500">
+                                                    ({selectedRoute.totalDistance} miles)
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                            <button
+                                                onClick={handleOptimize}
+                                                disabled={optimizing || (selectedRoute.stops?.length || 0) < 2}
+                                                className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                            >
+                                                {optimizing ? (
+                                                    <>
+                                                        <svg className="animate-spin w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Optimizing...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                        </svg>
+                                                        Optimize Route
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={openInGoogleMaps}
+                                                className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
+                                            >
+                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                </svg>
+                                                Open in Google Maps
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {optimizeResult && (
+                                        <div className={`mt-2 text-sm ${optimizeResult.success ? 'text-green-600' : 'text-red-600'}`}>
+                                            {optimizeResult.success
+                                                ? `Route optimized! Saved ${optimizeResult.distanceSaved} miles.`
+                                                : optimizeResult.error
+                                            }
+                                        </div>
+                                    )}
                                 </div>
                                 <div ref={mapRef} className="h-64 bg-gray-100">
                                     {!window.google && (

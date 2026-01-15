@@ -12,6 +12,7 @@ function Login({ onLogin }) {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showForgotPassword, setShowForgotPassword] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -116,6 +117,15 @@ function Login({ onLogin }) {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                 required
                             />
+                            {!isRegister && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForgotPassword(true)}
+                                    className="mt-1 text-sm text-primary-600 hover:text-primary-700"
+                                >
+                                    Forgot password?
+                                </button>
+                            )}
                         </div>
 
                         {isRegister && (
@@ -159,6 +169,27 @@ function Login({ onLogin }) {
                     </div>
                 </div>
             </div>
+        
+            {/* Forgot Password Modal */}
+            {showForgotPassword && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+                        <h3 className="text-lg font-semibold mb-4">Reset Password</h3>
+                        <p className="text-gray-600 mb-4">
+                            Please contact your system administrator to reset your password.
+                        </p>
+                        <p className="text-sm text-gray-500 mb-6">
+                            Email: admin@trashperson.com
+                        </p>
+                        <button
+                            onClick={() => setShowForgotPassword(false)}
+                            className="w-full py-2 px-4 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700"
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
