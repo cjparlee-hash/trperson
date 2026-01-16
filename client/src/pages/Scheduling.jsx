@@ -16,10 +16,79 @@ function Scheduling() {
         notes: ''
     });
     const [customerAddresses, setCustomerAddresses] = useState([]);
+    const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
+    const [monthAppointments, setMonthAppointments] = useState([]);
+    const [currentMonth, setCurrentMonth] = useState(() => {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() };
+    });
 
     useEffect(() => {
         fetchData();
     }, [selectedDate]);
+
+    useEffect(() => {
+        if (viewMode === 'month') {
+            fetchMonthData();
+        }
+    }, [viewMode, currentMonth]);
+
+    const fetchMonthData = async () => {
+        const token = localStorage.getItem('token');
+        const { year, month } = currentMonth;
+        const start = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const end = `${year}-${String(month + 1).padStart(2, '0')}-${lastDay}`;
+
+        try {
+            const response = await fetch(`${API_URL}/api/appointments/range?start=${start}&end=${end}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await response.json();
+            setMonthAppointments(data);
+        } catch (error) {
+            console.error('Error fetching month appointments:', error);
+        }
+    };
+
+    // Group appointments by date for month view
+    const getAppointmentsByDate = () => {
+        const grouped = {};
+        monthAppointments.forEach(appt => {
+            const date = appt.scheduled_date.split('T')[0];
+            if (!grouped[date]) grouped[date] = [];
+            grouped[date].push(appt);
+        });
+        return grouped;
+    };
+
+    // Get all days for month calendar grid
+    const getMonthDays = () => {
+        const { year, month } = currentMonth;
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const days = [];
+
+        // Add days from previous month to fill first week
+        const startPadding = firstDay.getDay();
+        for (let i = startPadding - 1; i >= 0; i--) {
+            const date = new Date(year, month, -i);
+            days.push({ date, isCurrentMonth: false });
+        }
+
+        // Add days of current month
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+            days.push({ date: new Date(year, month, d), isCurrentMonth: true });
+        }
+
+        // Add days from next month to complete last week
+        const endPadding = 6 - lastDay.getDay();
+        for (let i = 1; i <= endPadding; i++) {
+            days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
+        }
+
+        return days;
+    };
 
     const fetchData = async () => {
         const token = localStorage.getItem('token');
@@ -177,7 +246,32 @@ function Scheduling() {
                 </button>
             </div>
 
+            {/* View Toggle */}
+            <div className="flex items-center space-x-2 mb-4">
+                <button
+                    onClick={() => setViewMode('week')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        viewMode === 'week'
+                            ? 'bg-primary-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                    Week
+                </button>
+                <button
+                    onClick={() => setViewMode('month')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        viewMode === 'month'
+                            ? 'bg-primary-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                >
+                    Month
+                </button>
+            </div>
+
             {/* Week Navigation */}
+            {viewMode === 'week' && (
             <div className="bg-white rounded-lg shadow mb-6">
                 <div className="flex items-center justify-between p-4 border-b">
                     <button
@@ -236,6 +330,114 @@ function Scheduling() {
                     })}
                 </div>
             </div>
+            )}
+
+            {/* Month Calendar */}
+            {viewMode === 'month' && (
+            <div className="bg-white rounded-lg shadow mb-6">
+                <div className="flex items-center justify-between p-4 border-b">
+                    <button
+                        onClick={() => setCurrentMonth(prev => {
+                            const newMonth = prev.month - 1;
+                            if (newMonth < 0) {
+                                return { year: prev.year - 1, month: 11 };
+                            }
+                            return { ...prev, month: newMonth };
+                        })}
+                        className="p-2 hover:bg-gray-100 rounded"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h3 className="text-lg font-semibold">
+                        {new Date(currentMonth.year, currentMonth.month).toLocaleDateString('en-US', {
+                            month: 'long',
+                            year: 'numeric'
+                        })}
+                    </h3>
+                    <button
+                        onClick={() => setCurrentMonth(prev => {
+                            const newMonth = prev.month + 1;
+                            if (newMonth > 11) {
+                                return { year: prev.year + 1, month: 0 };
+                            }
+                            return { ...prev, month: newMonth };
+                        })}
+                        className="p-2 hover:bg-gray-100 rounded"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Day Headers */}
+                <div className="grid grid-cols-7 border-b">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} className="p-2 text-center text-xs font-medium text-gray-500 uppercase">
+                            {day}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7">
+                    {(() => {
+                        const appointmentsByDate = getAppointmentsByDate();
+                        const todayStr = new Date().toISOString().split('T')[0];
+
+                        return getMonthDays().map(({ date, isCurrentMonth }, index) => {
+                            const dateStr = date.toISOString().split('T')[0];
+                            const dayAppointments = appointmentsByDate[dateStr] || [];
+                            const isSelected = dateStr === selectedDate;
+                            const isToday = dateStr === todayStr;
+
+                            return (
+                                <button
+                                    key={index}
+                                    onClick={() => {
+                                        setSelectedDate(dateStr);
+                                        // Also fetch appointments for this specific date
+                                        fetchData();
+                                    }}
+                                    className={`min-h-[80px] p-2 border-b border-r text-left hover:bg-gray-50 transition-colors
+                                        ${!isCurrentMonth ? 'bg-gray-50' : ''}
+                                        ${isSelected ? 'ring-2 ring-primary-500 ring-inset bg-primary-50' : ''}
+                                    `}
+                                >
+                                    <div className={`text-sm font-medium mb-1
+                                        ${!isCurrentMonth ? 'text-gray-400' : ''}
+                                        ${isToday ? 'bg-primary-600 text-white w-6 h-6 rounded-full flex items-center justify-center' : ''}
+                                    `}>
+                                        {date.getDate()}
+                                    </div>
+                                    {dayAppointments.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {dayAppointments.slice(0, 3).map((appt, i) => (
+                                                <div
+                                                    key={i}
+                                                    className={`w-2 h-2 rounded-full ${
+                                                        appt.status === 'completed' ? 'bg-green-500' :
+                                                        appt.status === 'in_progress' ? 'bg-yellow-500' :
+                                                        appt.status === 'cancelled' ? 'bg-red-500' :
+                                                        'bg-blue-500'
+                                                    }`}
+                                                    title={appt.customer_name}
+                                                />
+                                            ))}
+                                            {dayAppointments.length > 3 && (
+                                                <span className="text-xs text-gray-500">+{dayAppointments.length - 3}</span>
+                                            )}
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        });
+                    })()}
+                </div>
+            </div>
+            )}
 
             {/* Appointments List */}
             <div className="bg-white rounded-lg shadow">
