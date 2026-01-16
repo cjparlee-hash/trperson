@@ -157,14 +157,14 @@ function Leads() {
                     <svg className="h-8 w-8 text-primary-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Leads</h1>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <div className="flex bg-gray-100 rounded-lg p-1">
+                    <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                         <button
                             onClick={() => setViewMode('pipeline')}
                             className={`px-3 py-1 rounded-md text-sm font-medium ${
-                                viewMode === 'pipeline' ? 'bg-white shadow' : ''
+                                viewMode === 'pipeline' ? 'bg-white dark:bg-gray-600 shadow dark:text-gray-100' : 'dark:text-gray-300'
                             }`}
                         >
                             Pipeline
@@ -172,7 +172,7 @@ function Leads() {
                         <button
                             onClick={() => setViewMode('list')}
                             className={`px-3 py-1 rounded-md text-sm font-medium ${
-                                viewMode === 'list' ? 'bg-white shadow' : ''
+                                viewMode === 'list' ? 'bg-white dark:bg-gray-600 shadow dark:text-gray-100' : 'dark:text-gray-300'
                             }`}
                         >
                             List
@@ -193,15 +193,15 @@ function Leads() {
             {viewMode === 'pipeline' ? (
                 <div className="flex space-x-4 overflow-x-auto pb-4">
                     {stages.filter(s => s.id !== 'won' && s.id !== 'lost').map((stage) => (
-                        <div key={stage.id} className={`flex-shrink-0 w-72 ${stage.color} rounded-lg p-4`}>
-                            <h3 className="font-semibold text-gray-700 mb-3">
+                        <div key={stage.id} className={`flex-shrink-0 w-72 ${stage.color} dark:bg-gray-700 rounded-lg p-4`}>
+                            <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">
                                 {stage.label} ({getLeadsByStage(stage.id).length})
                             </h3>
                             <div className="space-y-3">
                                 {getLeadsByStage(stage.id).map((lead) => (
-                                    <div key={lead.id} className="bg-white rounded-lg shadow p-4">
-                                        <div className="font-medium text-gray-900">{lead.name}</div>
-                                        {lead.phone && <div className="text-sm text-gray-500">{lead.phone}</div>}
+                                    <div key={lead.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                                        <div className="font-medium text-gray-900 dark:text-gray-100">{lead.name}</div>
+                                        {lead.phone && <div className="text-sm text-gray-500 dark:text-gray-400">{lead.phone}</div>}
                                         {lead.source && (
                                             <div className="text-xs text-gray-400 mt-1">Source: {lead.source}</div>
                                         )}
@@ -228,37 +228,37 @@ function Leads() {
                     ))}
                 </div>
             ) : (
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Contact</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stage</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Source</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                             {leads.map((lead) => (
-                                <tr key={lead.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap font-medium">{lead.name}</td>
+                                <tr key={lead.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <td className="px-6 py-4 whitespace-nowrap font-medium dark:text-gray-100">{lead.name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm">{lead.email}</div>
-                                        <div className="text-sm text-gray-500">{lead.phone}</div>
+                                        <div className="text-sm dark:text-gray-100">{lead.email}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">{lead.phone}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <select
                                             value={lead.stage}
                                             onChange={(e) => handleStageChange(lead.id, e.target.value)}
-                                            className="text-sm border rounded px-2 py-1"
+                                            className="text-sm border dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-gray-100"
                                         >
                                             {stages.map((s) => (
                                                 <option key={s.id} value={s.id}>{s.label}</option>
                                             ))}
                                         </select>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{lead.source}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{lead.source}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <button onClick={() => openModal(lead)} className="text-primary-600 hover:text-primary-900 mr-3">
                                             Edit
@@ -277,67 +277,67 @@ function Leads() {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto py-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 my-auto">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-semibold">{selectedLead ? 'Edit Lead' : 'Add Lead'}</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 my-auto">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-semibold dark:text-gray-100">{selectedLead ? 'Edit Lead' : 'Add Lead'}</h3>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     required
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                                     <input
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                                     <input
                                         type="tel"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
                                 <input
                                     type="text"
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
                                     <input
                                         type="text"
                                         value={formData.source}
                                         onChange={(e) => setFormData({ ...formData, source: e.target.value })}
                                         placeholder="e.g., Website, Referral"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stage</label>
                                     <select
                                         value={formData.stage}
                                         onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     >
                                         {stages.map((s) => (
                                             <option key={s.id} value={s.id}>{s.label}</option>
@@ -346,25 +346,25 @@ function Leads() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Follow-up Date</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Date</label>
                                 <input
                                     type="date"
                                     value={formData.follow_up_date}
                                     onChange={(e) => setFormData({ ...formData, follow_up_date: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     rows="3"
                                 />
                             </div>
                             <div className="flex justify-end space-x-3 pt-4">
-                                <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                                <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                                     Cancel
                                 </button>
                                 <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">

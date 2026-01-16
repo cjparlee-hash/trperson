@@ -12,6 +12,14 @@ import RoutePlanner from './pages/RoutePlanner';
 function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [darkMode, setDarkMode] = useState(() => {
+        return localStorage.getItem('theme') === 'dark';
+    });
+
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', darkMode);
+        localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+    }, [darkMode]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -47,7 +55,7 @@ function App() {
     }
 
     return (
-        <Layout user={user} onLogout={handleLogout}>
+        <Layout user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode}>
             <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/customers" element={<Customers />} />

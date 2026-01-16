@@ -233,7 +233,7 @@ function Scheduling() {
                     <svg className="h-8 w-8 text-primary-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    <h1 className="text-2xl font-bold text-gray-900">Scheduling</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Scheduling</h1>
                 </div>
                 <button
                     onClick={openModal}
@@ -253,7 +253,7 @@ function Scheduling() {
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                         viewMode === 'week'
                             ? 'bg-primary-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                 >
                     Week
@@ -263,7 +263,7 @@ function Scheduling() {
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                         viewMode === 'month'
                             ? 'bg-primary-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                 >
                     Month
@@ -272,15 +272,15 @@ function Scheduling() {
 
             {/* Week Navigation */}
             {viewMode === 'week' && (
-            <div className="bg-white rounded-lg shadow mb-6">
-                <div className="flex items-center justify-between p-4 border-b">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
                     <button
                         onClick={() => {
                             const prev = new Date(selectedDate);
                             prev.setDate(prev.getDate() - 7);
                             setSelectedDate(prev.toISOString().split('T')[0]);
                         }}
-                        className="p-2 hover:bg-gray-100 rounded"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded dark:text-gray-300"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -290,7 +290,7 @@ function Scheduling() {
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="px-3 py-2 border rounded-lg"
+                        className="px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100"
                     />
                     <button
                         onClick={() => {
@@ -298,7 +298,7 @@ function Scheduling() {
                             next.setDate(next.getDate() + 7);
                             setSelectedDate(next.toISOString().split('T')[0]);
                         }}
-                        className="p-2 hover:bg-gray-100 rounded"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded dark:text-gray-300"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -307,7 +307,7 @@ function Scheduling() {
                 </div>
 
                 {/* Week Days */}
-                <div className="grid grid-cols-7 divide-x">
+                <div className="grid grid-cols-7 divide-x dark:divide-gray-700">
                     {getWeekDates().map((date) => {
                         const dateStr = date.toISOString().split('T')[0];
                         const isSelected = dateStr === selectedDate;
@@ -317,12 +317,12 @@ function Scheduling() {
                             <button
                                 key={dateStr}
                                 onClick={() => setSelectedDate(dateStr)}
-                                className={`p-3 text-center hover:bg-gray-50 ${isSelected ? 'bg-primary-50' : ''}`}
+                                className={`p-3 text-center hover:bg-gray-50 dark:hover:bg-gray-700 ${isSelected ? 'bg-primary-50 dark:bg-primary-900/30' : ''}`}
                             >
-                                <div className="text-xs text-gray-500">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                     {date.toLocaleDateString('en-US', { weekday: 'short' })}
                                 </div>
-                                <div className={`text-lg font-semibold ${isToday ? 'text-primary-600' : ''}`}>
+                                <div className={`text-lg font-semibold ${isToday ? 'text-primary-600' : 'dark:text-gray-100'}`}>
                                     {date.getDate()}
                                 </div>
                             </button>
@@ -334,8 +334,8 @@ function Scheduling() {
 
             {/* Month Calendar */}
             {viewMode === 'month' && (
-            <div className="bg-white rounded-lg shadow mb-6">
-                <div className="flex items-center justify-between p-4 border-b">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
                     <button
                         onClick={() => setCurrentMonth(prev => {
                             const newMonth = prev.month - 1;
@@ -344,13 +344,13 @@ function Scheduling() {
                             }
                             return { ...prev, month: newMonth };
                         })}
-                        className="p-2 hover:bg-gray-100 rounded"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded dark:text-gray-300"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
-                    <h3 className="text-lg font-semibold">
+                    <h3 className="text-lg font-semibold dark:text-gray-100">
                         {new Date(currentMonth.year, currentMonth.month).toLocaleDateString('en-US', {
                             month: 'long',
                             year: 'numeric'
@@ -364,7 +364,7 @@ function Scheduling() {
                             }
                             return { ...prev, month: newMonth };
                         })}
-                        className="p-2 hover:bg-gray-100 rounded"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded dark:text-gray-300"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -373,9 +373,9 @@ function Scheduling() {
                 </div>
 
                 {/* Day Headers */}
-                <div className="grid grid-cols-7 border-b">
+                <div className="grid grid-cols-7 border-b dark:border-gray-700">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} className="p-2 text-center text-xs font-medium text-gray-500 uppercase">
+                        <div key={day} className="p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                             {day}
                         </div>
                     ))}
@@ -401,13 +401,13 @@ function Scheduling() {
                                         // Also fetch appointments for this specific date
                                         fetchData();
                                     }}
-                                    className={`min-h-[80px] p-2 border-b border-r text-left hover:bg-gray-50 transition-colors
-                                        ${!isCurrentMonth ? 'bg-gray-50' : ''}
-                                        ${isSelected ? 'ring-2 ring-primary-500 ring-inset bg-primary-50' : ''}
+                                    className={`min-h-[80px] p-2 border-b border-r dark:border-gray-700 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors
+                                        ${!isCurrentMonth ? 'bg-gray-50 dark:bg-gray-900' : ''}
+                                        ${isSelected ? 'ring-2 ring-primary-500 ring-inset bg-primary-50 dark:bg-primary-900/30' : ''}
                                     `}
                                 >
                                     <div className={`text-sm font-medium mb-1
-                                        ${!isCurrentMonth ? 'text-gray-400' : ''}
+                                        ${!isCurrentMonth ? 'text-gray-400' : 'dark:text-gray-100'}
                                         ${isToday ? 'bg-primary-600 text-white w-6 h-6 rounded-full flex items-center justify-center' : ''}
                                     `}>
                                         {date.getDate()}
@@ -440,9 +440,9 @@ function Scheduling() {
             )}
 
             {/* Appointments List */}
-            <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b">
-                    <h2 className="font-semibold">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="px-6 py-4 border-b dark:border-gray-700">
+                    <h2 className="font-semibold dark:text-gray-100">
                         Appointments for {new Date(selectedDate).toLocaleDateString('en-US', {
                             weekday: 'long',
                             year: 'numeric',
@@ -451,21 +451,21 @@ function Scheduling() {
                         })}
                     </h2>
                 </div>
-                <div className="divide-y">
+                <div className="divide-y dark:divide-gray-700">
                     {appointments.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
+                        <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                             No appointments scheduled for this day.
                         </div>
                     ) : (
                         appointments.map((appt) => (
-                            <div key={appt.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div key={appt.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <div className="flex items-center space-x-4">
-                                    <div className="text-lg font-medium text-gray-900 w-20">
+                                    <div className="text-lg font-medium text-gray-900 dark:text-gray-100 w-20">
                                         {appt.scheduled_time || 'Any time'}
                                     </div>
                                     <div>
-                                        <div className="font-medium text-gray-900">{appt.customer_name}</div>
-                                        <div className="text-sm text-gray-500">
+                                        <div className="font-medium text-gray-900 dark:text-gray-100">{appt.customer_name}</div>
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
                                             {appt.street}, {appt.city}
                                         </div>
                                         {appt.service_name && (
@@ -480,7 +480,7 @@ function Scheduling() {
                                     <select
                                         value={appt.status}
                                         onChange={(e) => handleStatusChange(appt.id, e.target.value)}
-                                        className="text-sm border rounded px-2 py-1"
+                                        className="text-sm border dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-gray-100"
                                     >
                                         <option value="scheduled">Scheduled</option>
                                         <option value="in_progress">In Progress</option>
@@ -497,17 +497,17 @@ function Scheduling() {
             {/* Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-semibold">New Appointment</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-semibold dark:text-gray-100">New Appointment</h3>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer *</label>
                                 <select
                                     value={formData.customer_id}
                                     onChange={(e) => handleCustomerChange(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     required
                                 >
                                     <option value="">Select customer</option>
@@ -517,11 +517,11 @@ function Scheduling() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address *</label>
                                 <select
                                     value={formData.address_id}
                                     onChange={(e) => setFormData({ ...formData, address_id: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     required
                                     disabled={!formData.customer_id}
                                 >
@@ -533,43 +533,43 @@ function Scheduling() {
                                     ))}
                                 </select>
                                 {formData.customer_id && customerAddresses.length === 0 && (
-                                    <p className="text-sm text-yellow-600 mt-1">
+                                    <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
                                         This customer has no addresses. Add one first.
                                     </p>
                                 )}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date *</label>
                                     <input
                                         type="date"
                                         value={formData.scheduled_date}
                                         onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time</label>
                                     <input
                                         type="time"
                                         value={formData.scheduled_time}
                                         onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     rows="2"
                                 />
                             </div>
                             <div className="flex justify-end space-x-3 pt-4">
-                                <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                                <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                                     Cancel
                                 </button>
                                 <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">

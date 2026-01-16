@@ -79,13 +79,13 @@ function Dashboard() {
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                 </svg>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {statCards.map((stat, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow p-6">
+                    <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div className="flex items-center">
                             <div className={`${stat.color} p-3 rounded-lg`}>
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,8 +93,8 @@ function Dashboard() {
                                 </svg>
                             </div>
                             <div className="ml-4">
-                                <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-                                <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
+                                <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{stat.value}</p>
                             </div>
                         </div>
                     </div>
@@ -102,40 +102,40 @@ function Dashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <a href="/customers" className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <a href="/customers" className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                         <svg className="w-8 h-8 text-primary-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                         </svg>
-                        <span className="text-sm font-medium text-gray-700">Add Customer</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Add Customer</span>
                     </a>
-                    <a href="/scheduling" className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <a href="/scheduling" className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                         <svg className="w-8 h-8 text-primary-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        <span className="text-sm font-medium text-gray-700">New Appointment</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">New Appointment</span>
                     </a>
-                    <a href="/billing" className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <a href="/billing" className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                         <svg className="w-8 h-8 text-primary-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span className="text-sm font-medium text-gray-700">Create Invoice</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Create Invoice</span>
                     </a>
-                    <a href="/routes" className="flex flex-col items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <a href="/routes" className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
                         <svg className="w-8 h-8 text-primary-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
-                        <span className="text-sm font-medium text-gray-700">Plan Route</span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Plan Route</span>
                     </a>
                 </div>
             </div>
 
             {/* Welcome Message */}
-            <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
-                <h2 className="text-lg font-semibold text-primary-800 mb-2">Welcome to TrashPerson CRM</h2>
-                <p className="text-primary-700">
+            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-6">
+                <h2 className="text-lg font-semibold text-primary-800 dark:text-primary-300 mb-2">Welcome to TrashPerson CRM</h2>
+                <p className="text-primary-700 dark:text-primary-400">
                     Get started by adding your customers and scheduling your first pickups.
                     Use the navigation menu on the left to access all features.
                 </p>

@@ -271,14 +271,14 @@ function RoutePlanner() {
                     <svg className="h-8 w-8 text-primary-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    <h1 className="text-2xl font-bold text-gray-900">Route Planner</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Route Planner</h1>
                 </div>
                 <div className="flex items-center space-x-4">
                     <input
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="px-3 py-2 border rounded-lg"
+                        className="px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100"
                     />
                     <button
                         onClick={openModal}
@@ -294,11 +294,11 @@ function RoutePlanner() {
 
             <div className="grid grid-cols-3 gap-6">
                 {/* Routes List */}
-                <div className="col-span-1 bg-white rounded-lg shadow">
-                    <div className="px-4 py-3 border-b font-semibold">Routes for {selectedDate}</div>
-                    <div className="divide-y">
+                <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div className="px-4 py-3 border-b dark:border-gray-700 font-semibold dark:text-gray-100">Routes for {selectedDate}</div>
+                    <div className="divide-y dark:divide-gray-700">
                         {routes.length === 0 ? (
-                            <div className="p-4 text-center text-gray-500">
+                            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                 No routes planned for this day.
                             </div>
                         ) : (
@@ -306,12 +306,12 @@ function RoutePlanner() {
                                 <button
                                     key={route.id}
                                     onClick={() => fetchRouteDetails(route.id)}
-                                    className={`w-full p-4 text-left hover:bg-gray-50 ${
-                                        selectedRoute?.id === route.id ? 'bg-primary-50' : ''
+                                    className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                                        selectedRoute?.id === route.id ? 'bg-primary-50 dark:bg-primary-900/30' : ''
                                     }`}
                                 >
-                                    <div className="font-medium">{route.name}</div>
-                                    <div className="text-sm text-gray-500">
+                                    <div className="font-medium dark:text-gray-100">{route.name}</div>
+                                    <div className="text-sm text-gray-500 dark:text-gray-400">
                                         {route.completed_count || 0} / {route.stop_count || 0} stops completed
                                     </div>
                                     <div className="mt-1">
@@ -334,13 +334,13 @@ function RoutePlanner() {
                     {selectedRoute ? (
                         <>
                             {/* Map */}
-                            <div className="bg-white rounded-lg shadow">
-                                <div className="px-4 py-3 border-b">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                                <div className="px-4 py-3 border-b dark:border-gray-700">
                                     <div className="flex justify-between items-center">
                                         <div>
-                                            <span className="font-semibold">{selectedRoute.name}</span>
+                                            <span className="font-semibold dark:text-gray-100">{selectedRoute.name}</span>
                                             {selectedRoute.totalDistance > 0 && (
-                                                <span className="ml-2 text-sm text-gray-500">
+                                                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                                                     ({selectedRoute.totalDistance} miles)
                                                 </span>
                                             )}
@@ -388,9 +388,9 @@ function RoutePlanner() {
                                         </div>
                                     )}
                                 </div>
-                                <div ref={mapRef} className="h-64 bg-gray-100">
+                                <div ref={mapRef} className="h-64 bg-gray-100 dark:bg-gray-700">
                                     {!window.google && (
-                                        <div className="h-full flex items-center justify-center text-gray-500">
+                                        <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
                                             <div className="text-center">
                                                 <p>Google Maps not loaded.</p>
                                                 <p className="text-sm">Add your API key to enable maps.</p>
@@ -401,9 +401,9 @@ function RoutePlanner() {
                             </div>
 
                             {/* Stops List */}
-                            <div className="bg-white rounded-lg shadow">
-                                <div className="px-4 py-3 border-b font-semibold">Stops</div>
-                                <div className="divide-y">
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                                <div className="px-4 py-3 border-b dark:border-gray-700 font-semibold dark:text-gray-100">Stops</div>
+                                <div className="divide-y dark:divide-gray-700">
                                     {selectedRoute.stops?.map((stop, index) => (
                                         <div key={stop.id} className="p-4 flex items-center justify-between">
                                             <div className="flex items-center space-x-4">
@@ -415,8 +415,8 @@ function RoutePlanner() {
                                                     {stop.status === 'completed' ? '✓' : index + 1}
                                                 </div>
                                                 <div>
-                                                    <div className="font-medium">{stop.customer_name}</div>
-                                                    <div className="text-sm text-gray-500">
+                                                    <div className="font-medium dark:text-gray-100">{stop.customer_name}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {stop.street}, {stop.city}
                                                     </div>
                                                     {stop.scheduled_time && (
@@ -426,7 +426,7 @@ function RoutePlanner() {
                                             </div>
                                             <div className="flex items-center space-x-2">
                                                 {stop.customer_phone && (
-                                                    <a href={`tel:${stop.customer_phone}`} className="p-2 text-gray-400 hover:text-gray-600">
+                                                    <a href={`tel:${stop.customer_phone}`} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                         </svg>
@@ -435,7 +435,7 @@ function RoutePlanner() {
                                                 <select
                                                     value={stop.status}
                                                     onChange={(e) => handleStopStatus(selectedRoute.id, stop.id, e.target.value)}
-                                                    className="text-sm border rounded px-2 py-1"
+                                                    className="text-sm border dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-gray-100"
                                                 >
                                                     <option value="pending">Pending</option>
                                                     <option value="completed">Completed</option>
@@ -448,7 +448,7 @@ function RoutePlanner() {
                             </div>
                         </>
                     ) : (
-                        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400">
                             Select a route to view details and map.
                         </div>
                     )}
@@ -458,28 +458,28 @@ function RoutePlanner() {
             {/* Create Route Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-semibold">Create Route</h3>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-semibold dark:text-gray-100">Create Route</h3>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Route Name</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Route Name</label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
                                 <input
                                     type="date"
                                     value={formData.date}
                                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 dark:text-gray-100"
                                     required
                                 />
                             </div>
@@ -516,7 +516,7 @@ function RoutePlanner() {
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-3 pt-4">
-                                <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                                <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600">
                                     Cancel
                                 </button>
                                 <button
