@@ -160,7 +160,7 @@ function Leads() {
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Leads</h1>
                 </div>
                 <div className="flex items-center space-x-4">
-                    <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <div id="leads-view-toggle" className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                         <button
                             onClick={() => setViewMode('pipeline')}
                             className={`px-3 py-1 rounded-md text-sm font-medium ${
@@ -179,6 +179,7 @@ function Leads() {
                         </button>
                     </div>
                     <button
+                        id="add-lead-btn"
                         onClick={() => openModal()}
                         className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center"
                     >
@@ -191,7 +192,7 @@ function Leads() {
             </div>
 
             {viewMode === 'pipeline' ? (
-                <div className="flex space-x-4 overflow-x-auto pb-4">
+                <div id="leads-pipeline" className="flex space-x-4 overflow-x-auto pb-4">
                     {stages.filter(s => s.id !== 'won' && s.id !== 'lost').map((stage) => (
                         <div key={stage.id} className={`flex-shrink-0 w-72 ${stage.color} dark:bg-gray-700 rounded-lg p-4`}>
                             <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">

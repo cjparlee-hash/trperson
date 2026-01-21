@@ -172,6 +172,7 @@ function Billing() {
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Billing</h1>
                 </div>
                 <button
+                    id="create-invoice-btn"
                     onClick={openModal}
                     className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center"
                 >
@@ -183,7 +184,7 @@ function Billing() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div id="billing-stats" className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                     <div className="text-sm text-gray-500 dark:text-gray-400">Total Invoiced</div>
                     <div className="text-2xl font-bold dark:text-gray-100">${stats.total.toFixed(2)}</div>
@@ -204,7 +205,7 @@ function Billing() {
 
             {/* Tabs */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-                <div className="border-b dark:border-gray-700">
+                <div id="billing-tabs" className="border-b dark:border-gray-700">
                     <nav className="flex -mb-px">
                         {['all', 'draft', 'sent', 'paid', 'overdue'].map((tab) => (
                             <button

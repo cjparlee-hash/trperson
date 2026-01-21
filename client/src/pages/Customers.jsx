@@ -122,6 +122,7 @@ function Customers() {
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Customers</h1>
                 </div>
                 <button
+                    id="add-customer-btn"
                     onClick={() => openModal()}
                     className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center"
                 >
@@ -133,7 +134,7 @@ function Customers() {
             </div>
 
             {/* Customer List */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div id="customers-table" className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>

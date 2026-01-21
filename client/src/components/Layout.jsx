@@ -70,7 +70,7 @@ function Layout({ user, onLogout, children, darkMode, setDarkMode }) {
                     </div>
                 </div>
 
-                <nav className="mt-4">
+                <nav id="sidebar-nav" className="mt-4">
                     {navItems.map((item) => (
                         <NavLink
                             key={item.path}
@@ -92,9 +92,27 @@ function Layout({ user, onLogout, children, darkMode, setDarkMode }) {
                     ))}
                 </nav>
 
+                {/* Help button */}
+                <div className="absolute bottom-28 left-0 right-0 px-4">
+                    <button
+                        id="help-button"
+                        onClick={() => {
+                            localStorage.removeItem('tourCompleted');
+                            window.location.reload();
+                        }}
+                        className="w-full flex items-center px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Help Tour
+                    </button>
+                </div>
+
                 {/* Dark mode toggle */}
                 <div className="absolute bottom-20 left-0 right-0 px-4">
                     <button
+                        id="dark-mode-toggle"
                         onClick={() => setDarkMode(!darkMode)}
                         className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >

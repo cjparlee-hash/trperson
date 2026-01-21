@@ -83,7 +83,7 @@ function Dashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div id="stats-cards" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 {statCards.map((stat, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                         <div className="flex items-center">
@@ -102,7 +102,7 @@ function Dashboard() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+            <div id="quick-actions" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <a href="/customers" className="flex flex-col items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">

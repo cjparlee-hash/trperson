@@ -281,6 +281,7 @@ function RoutePlanner() {
                         className="px-3 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-100"
                     />
                     <button
+                        id="create-route-btn"
                         onClick={openModal}
                         className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center"
                     >
@@ -294,7 +295,7 @@ function RoutePlanner() {
 
             <div className="grid grid-cols-3 gap-6">
                 {/* Routes List */}
-                <div className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div id="routes-list" className="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow">
                     <div className="px-4 py-3 border-b dark:border-gray-700 font-semibold dark:text-gray-100">Routes for {selectedDate}</div>
                     <div className="divide-y dark:divide-gray-700">
                         {routes.length === 0 ? (
@@ -334,7 +335,7 @@ function RoutePlanner() {
                     {selectedRoute ? (
                         <>
                             {/* Map */}
-                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                            <div id="route-map" className="bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div className="px-4 py-3 border-b dark:border-gray-700">
                                     <div className="flex justify-between items-center">
                                         <div>

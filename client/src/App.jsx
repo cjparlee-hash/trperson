@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from './components/Layout';
+import Tour from './components/Tour';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
@@ -14,6 +15,9 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [darkMode, setDarkMode] = useState(() => {
         return localStorage.getItem('theme') === 'dark';
+    });
+    const [runTour, setRunTour] = useState(() => {
+        return !localStorage.getItem('tourCompleted');
     });
 
     useEffect(() => {
@@ -56,6 +60,7 @@ function App() {
 
     return (
         <Layout user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode}>
+            <Tour run={runTour} setRun={setRunTour} darkMode={darkMode} />
             <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/customers" element={<Customers />} />
